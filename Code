@@ -1,0 +1,77 @@
+from pygame import *
+win = display.set_mode((700,500))
+font.init()
+font = font.Font(None, 50)
+display.set_caption('Ping-Pong')
+mixer.init()
+mixer.music.load('music.ogg')
+boom_sound = mixer.Sound('bam.ogg')
+win_music = mixer.Sound('win.ogg')
+mixer.music.play()
+Game_open = True
+Finish = False
+clock = time.Clock()
+background = transform.scale(image.load('table.jpg'), (700, 500))
+bullets = sprite.Group()
+class GameSprite(sprite.Sprite):
+    def __init__(self, sprite_picture, x, y, weight, height, speed):
+        sprite.Sprite.__init__(self)
+        self.image = transform.scale(image.load(sprite_picture), (weight, height))
+        self.speed = speed
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+    def reset(self):
+        win.blit(self.image, (self.rect.x, self.rect.y))
+class Player(GameSprite):
+    def update_right(self):
+        keys = key.get_pressed()
+        if keys[K_UP] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_DOWN] and self.rect.y < 420:
+            self.rect.y += self.speed
+    def update_left(self):
+        keys = key.get_pressed()
+        if keys[K_w] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_s] and self.rect.y < 420:
+            self.rect.y += self.speed
+rocket_right = Player('rocket_ping_pong2.jpg', 620, 200, 50, 150, 8)
+rocket_left = Player('rocket_ping_pong.jpg', 30, 200, 50, 150, 8)
+ball = GameSprite('ball.png', 350, 250, 50, 50, 5)
+speed_x = 5
+speed_y = 5
+win_right_player = font.render('Первый игрок победил', True, (0, 255, 0))
+lose_right_player = font.render('Второй игрок победил', True, (0, 255, 0))
+while Game_open:
+    for i in event.get():
+        if i.type == QUIT:
+            Game_open = False
+    if Finish != True:
+        ball.rect.x += speed_x
+        ball.rect.y += speed_y
+        win.blit(background, (0, 0))
+        ball.reset()
+        if sprite.collide_rect(ball, rocket_left) or sprite.collide_rect(ball, rocket_right):
+            speed_x *= -1
+            speed_y *= -1
+            boom_sound.play()
+        if ball.rect.y > 450 or ball.rect.y < 0:
+            speed_y *= -1
+        if ball.rect.x > 700:
+            win.blit(win_right_player, (100, 250))
+            mixer.music.pause()
+            win_music.play()
+            Finish = True
+        if ball.rect.x < 0:
+            win.blit(lose_right_player, (100, 250))
+            mixer.music.pause()
+            win_music.play()
+            Finish = True
+        rocket_right.update_right()
+        rocket_left.update_left()
+        rocket_left.reset()
+        rocket_right.reset()
+    display.update()
+    clock.tick(60)
+display.update()
